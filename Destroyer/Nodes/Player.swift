@@ -210,7 +210,7 @@ class Player: SCNNode {
         
         self.hpPoints -= hpPoints
         
-        NotificationCenter.default.post(name: Notification.Name("hpChanged"), object: nil, userInfo: ["playerMaxHp": maxHpPoints, "currentHp": hpPoints])
+        NotificationCenter.default.post(name: Notification.Name("hpChanged"), object: nil, userInfo: ["playerMaxHp": maxHpPoints, "currentHp": self.hpPoints])
         
         if self.hpPoints <= 0 {
             die()
