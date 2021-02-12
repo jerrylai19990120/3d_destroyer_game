@@ -23,6 +23,7 @@ class GameView: SCNView {
         super.awakeFromNib()
         
         setup2DOverlay()
+        setupObservers()
     }
     
     override func layoutSubviews() {
@@ -31,7 +32,7 @@ class GameView: SCNView {
     }
     
     deinit {
-        
+        NotificationCenter.default.removeObserver(self)
     }
     
     //functions
@@ -121,6 +122,35 @@ class GameView: SCNView {
         hpBar.xScale = 1.0
         hpBar.yScale = 1.0
         scene.addChild(hpBar)
+        
+    }
+    
+    private func setupObservers(){
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(hpDidChange), name: Notification.Name("hpChanged"), object: nil)
+    }
+    
+    @objc private func hpDidChange(notif: Notification){
+        guard let userInfo = notif.userInfo as? [String:Any], let playerMaxHp = userInfo["playerMaxHp"] as? Float, let currentHp = userInfo["currentHp"] as? Float else {return}
+        
+        let v1 = CGFloat(playerMaxHp)
+        let v2 = hpMaxWidth
+        let v3 = CGFloat(currentHp)
+        var x: CGFloat = 0.0
+        
+        x = (v2*v3) / v1
+        
+        if x <= hpMaxWidth / 3.5 {
+            hpBar.color = UIColor.red
+            
+        } else if x <= hpMaxWidth / 2 {
+            hpBar.color = UIColor.orange
+        }
+        
+        if x < 0 { x=0 }
+        
+        let reduceAction = SKAction.resize(toWidth: x, duration: 0.3)
+        hpBar.run(reduceAction)
         
     }
     

@@ -18,6 +18,7 @@ class Player: SCNNode {
     private var daeHolderNode = SCNNode()
     private var characterNode: SCNNode!
     private var collider:SCNNode!
+    private var weaponCollider: SCNNode!
     
     //animations
     private var walkAnimation = CAAnimation()
@@ -116,6 +117,8 @@ class Player: SCNNode {
     //movement
     func walkInDirection(_ direction: float3, time: TimeInterval, scene: SCNScene){
         
+        if isDead || isAttacking { return }
+        
         if previousUpdateTime == 0.0 {
             return
         }
@@ -160,6 +163,12 @@ class Player: SCNNode {
     
     //collisions
     var replacementPosition: SCNVector3 = SCNVector3Zero
+    private var activeWeaponCollideNodes = Set<SCNNode>()
+    
+    //battle
+    var isDead = false
+    private let maxHpPoints: Float = 100.0
+    private var hpPoints: Float = 100.0
     
     func setupColliders(with scale:CGFloat){
         
@@ -183,8 +192,93 @@ class Player: SCNNode {
         addChildNode(collider)
     }
     
+    
+    func weaponCollide(with node:SCNNode){
+            activeWeaponCollideNodes.insert(node)
+    }
+    
+    func weaponUnCollide(with node: SCNNode){
+        activeWeaponCollideNodes.remove(node)
+    }
+    
+    //battle
+    var isAttacking = false
+    private var attackTimer: Timer?
+    private var attackFrameCounter = 0
+    
+    func gotHit(with hpPoints: Float){
+        
+        self.hpPoints -= hpPoints
+        
+        NotificationCenter.default.post(name: Notification.Name("hpChanged"), object: nil, userInfo: ["playerMaxHp": maxHpPoints, "currentHp": hpPoints])
+        
+        if self.hpPoints <= 0 {
+            die()
+        }
+    }
+    
+    private func die(){
+        isDead = true
+        characterNode.removeAllActions()
+        characterNode.removeAllAnimations()
+        characterNode.addAnimation(deadAnimation, forKey: "dead")
+    }
+    
+    func setupWeaponCollider(with scale: CGFloat){
+        let geometryBox = SCNBox(width: 160, height: 140, length: 160, chamferRadius: 0.0)
+        geometryBox.firstMaterial?.diffuse.contents = UIColor.orange
+        
+        weaponCollider = SCNNode(geometry: geometryBox)
+        weaponCollider.name = "weaponCollider"
+        weaponCollider.position = SCNVector3Make(-10, 108.4, 88)
+        weaponCollider.opacity = 0.0
+        addChildNode(weaponCollider)
+        
+        let geometry = SCNBox(width: 160.0*scale, height: 140.0, length: 160.0, chamferRadius: 0.0)
+        let physicsShape = SCNPhysicsShape(geometry: geometry, options: nil)
+        weaponCollider.physicsBody = SCNPhysicsBody(type: .kinematic, shape: physicsShape)
+        weaponCollider.physicsBody!.categoryBitMask = BitmaskPlayerWeapon
+        weaponCollider.physicsBody!.contactTestBitMask = BitmaskGolem
+    }
+    
+    func attack1() {
+        if isAttacking || isDead {return}
+        
+        isAttacking = true
+        isWalking = false
+        
+        attackTimer = Timer.scheduledTimer(timeInterval: 0.05, target: self, selector: #selector(attackTimerTicked), userInfo: nil, repeats: true)
+        
+        characterNode.removeAllActions()
+        characterNode.addAnimation(attack1Animation, forKey: "attack1")
+    }
+    
+    @objc private func attackTimerTicked(timer: Timer){
+        
+        attackFrameCounter += 1
+        
+        if attackFrameCounter == 12 {
+            for node in activeWeaponCollideNodes {
+                
+                if let golem = node as? Golem {
+                    golem.gotHit(by: node, with: 30.0)
+                }
+            }
+        }
+    }
 }
 
 extension Player: CAAnimationDelegate {
     
+    func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
+        
+        guard let id = anim.value(forKey: "animationId") as? String else {return}
+        
+        if id == "attack1" {
+            attackTimer?.invalidate()
+            attackFrameCounter = 0
+            isAttacking = false
+        }
+        
+    }
 }
