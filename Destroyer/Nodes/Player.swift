@@ -120,7 +120,7 @@ class Player: SCNNode {
         if isDead || isAttacking { return }
         
         if previousUpdateTime == 0.0 {
-            return
+            previousUpdateTime = time
         }
         
         let deltaTime = Float(min(time-previousUpdateTime, 1/60))
@@ -149,7 +149,7 @@ class Player: SCNNode {
         endpoint0.y -= 0.1
         endpoint1.y += 0.88
         
-        let results = scene.physicsWorld.rayTestWithSegment(from: endpoint0, to: endpoint1, options: [.collisionBitMask: BitmaskWall, .searchMode: SCNPhysicsWorld.TestSearchMode.closest])
+        let results = scene.physicsWorld.rayTestWithSegment(from: endpoint1, to: endpoint0, options: [.collisionBitMask: BitmaskWall, .searchMode: SCNPhysicsWorld.TestSearchMode.closest])
         
         if let result = results.first {
             let groundAltitude = result.worldCoordinates.y

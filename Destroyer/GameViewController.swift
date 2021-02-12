@@ -78,7 +78,7 @@ class GameViewController: UIViewController {
     //Scenes
     private func setupScene(){
         
-        gameView.allowsCameraControl = true
+        //gameView.allowsCameraControl = true
         gameView.antialiasingMode = .multisampling4X
         gameView.delegate = self
         
@@ -118,8 +118,8 @@ class GameViewController: UIViewController {
     private func setupCamera(){
         
         cameraStick = mainScene.rootNode.childNode(withName: "CameraStick", recursively: false)!
-        cameraXHolder = mainScene.rootNode.childNode(withName: "xHolder", recursively: true)
-        cameraYHolder = mainScene.rootNode.childNode(withName: "yHolder", recursively: true)
+        cameraXHolder = mainScene.rootNode.childNode(withName: "xHolder", recursively: true)!
+        cameraYHolder = mainScene.rootNode.childNode(withName: "yHolder", recursively: true)!
     }
     
     private func panCamera(_ direction: float2) {
@@ -133,14 +133,13 @@ class GameViewController: UIViewController {
         let currX = cameraXHolder.rotation
         let xRotationValue = currX.w - directionToPan.x * panReducer
         
-        cameraXHolder.rotation = SCNVector4Make(0, 1, 0, xRotationValue)
-        
         let currY = cameraYHolder.rotation
         var yRotationValue = currY.w + directionToPan.y * panReducer
         
         if yRotationValue < -0.94 { yRotationValue = -0.94 }
         if yRotationValue > 0.66 { yRotationValue = 0.66 }
- 
+        
+        cameraXHolder.rotation = SCNVector4Make(0, 1, 0, xRotationValue)
         cameraYHolder.rotation = SCNVector4Make(1, 0, 0, yRotationValue)
     }
     
@@ -160,7 +159,7 @@ class GameViewController: UIViewController {
         mainScene.rootNode.addChildNode(player!)
         
         player!.setupColliders(with: 0.0026)
-        player?.setupWeaponCollider(with: 0.0026)
+        player!.setupWeaponCollider(with: 0.0026)
     }
     
     //touches + movement
@@ -364,6 +363,7 @@ extension GameViewController: SCNPhysicsContactDelegate {
             if other.name == "collider" {
                 golem.isCollideWithEnemy = true
             }
+            if other.name == "weaponCollider" { player!.weaponCollide(with: golem) }
         }
     }
     

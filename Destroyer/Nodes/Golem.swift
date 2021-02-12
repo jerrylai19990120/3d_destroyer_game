@@ -173,7 +173,7 @@ class Golem:SCNNode {
                 endpoint0.y -= 0.1
                 endpoint1.y += 0.08
                 
-                let results = scene.physicsWorld.rayTestWithSegment(from: endpoint0, to: endpoint1, options: [.collisionBitMask: BitmaskWall, .searchMode: SCNPhysicsWorld.TestSearchMode.closest])
+                let results = scene.physicsWorld.rayTestWithSegment(from: endpoint1, to: endpoint0, options: [.collisionBitMask: BitmaskWall, .searchMode: SCNPhysicsWorld.TestSearchMode.closest])
                 
                 if let result = results.first {
                     
@@ -215,9 +215,11 @@ class Golem:SCNNode {
         let geometry = SCNCapsule(capRadius: 13, height: 52)
         geometry.firstMaterial?.diffuse.contents = UIColor.blue
         
+        
         collider = SCNNode(geometry: geometry)
         collider.name = "golemCollider"
         collider.position = SCNVector3Make(0, 46, 0)
+        collider.opacity = 0.0
         
         let shapeGeometry = SCNCapsule(capRadius: 13*scale, height: 52*scale)
         let physicsShape = SCNPhysicsShape(geometry: shapeGeometry, options: nil)

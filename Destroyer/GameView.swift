@@ -27,7 +27,7 @@ class GameView: SCNView {
     }
     
     override func layoutSubviews() {
-        
+        super.layoutSubviews()
         layout2DOverlay()
     }
     
@@ -54,7 +54,7 @@ class GameView: SCNView {
         setupHpBar(with: skScene)
         
         overlaySKScene = skScene
-        skScene.isUserInteractionEnabled = true
+        skScene.isUserInteractionEnabled = false
         
     }
     
@@ -91,7 +91,7 @@ class GameView: SCNView {
         
         attackBtnSprite = SKSpriteNode(imageNamed: "art.scnassets/Assets/attack1.png")
         
-        attackBtnSprite.position = CGPoint(x: bounds.size.height - 110.0, y: 50)
+        attackBtnSprite.position = CGPoint(x: UIScreen.main.bounds.width * 0.88, y: 50)
         
         attackBtnSprite.xScale = 1.0
         attackBtnSprite.yScale = 1.0
@@ -104,7 +104,7 @@ class GameView: SCNView {
     
     func virtualAttackBtnBounds() -> CGRect {
         
-        var virtualBounds = CGRect(x: bounds.width-110, y: 50, width: 60, height: 60)
+        var virtualBounds = CGRect(x: UIScreen.main.bounds.width * 0.88, y: 50, width: 60, height: 60)
         
         virtualBounds.origin.y = bounds.size.height - virtualBounds.size.height - virtualBounds.origin.y
         
@@ -118,7 +118,7 @@ class GameView: SCNView {
         hpBar = SKSpriteNode(color: UIColor.green, size: CGSize(width: hpMaxWidth, height: 20))
         
         hpBar.anchorPoint = CGPoint(x: 0.0, y: 0.0)
-        hpBar.position = CGPoint(x: 15.0, y: bounds.width - 35.0)
+        hpBar.position = CGPoint(x: 15.0, y: UIScreen.main.bounds.height * 0.88 )
         hpBar.xScale = 1.0
         hpBar.yScale = 1.0
         scene.addChild(hpBar)
@@ -138,7 +138,7 @@ class GameView: SCNView {
         let v3 = CGFloat(currentHp)
         var x: CGFloat = 0.0
         
-        x = (v2*v3) / v1
+        x = (v2 * v3) / v1
         
         if x <= hpMaxWidth / 3.5 {
             hpBar.color = UIColor.red
