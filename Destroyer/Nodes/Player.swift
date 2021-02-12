@@ -17,6 +17,7 @@ class Player: SCNNode {
     
     private var daeHolderNode = SCNNode()
     private var characterNode: SCNNode!
+    private var collider:SCNNode!
     
     //animations
     private var walkAnimation = CAAnimation()
@@ -124,6 +125,8 @@ class Player: SCNNode {
         let speed = deltaTime * 1.3
         previousUpdateTime = time
         
+        let initialPosition = position
+        
         if direction.x != 0.0 && direction.z != 0.0 {
             
             let pos = float3(position)
@@ -135,8 +138,51 @@ class Player: SCNNode {
             isWalking = false
         }
         
+        //update altitude
+        var pos = position
+        var endpoint0 = pos
+        var endpoint1 = pos
         
+        endpoint0.y -= 0.1
+        endpoint1.y += 0.88
+        
+        let results = scene.physicsWorld.rayTestWithSegment(from: endpoint0, to: endpoint1, options: [.collisionBitMask: BitmaskWall, .searchMode: SCNPhysicsWorld.TestSearchMode.closest])
+        
+        if let result = results.first {
+            let groundAltitude = result.worldCoordinates.y
+            
+            pos.y = groundAltitude
+            position = pos
+        } else {
+            position = initialPosition
+        }
     }
+    
+    //collisions
+    var replacementPosition: SCNVector3 = SCNVector3Zero
+    
+    func setupColliders(with scale:CGFloat){
+        
+        let geometry = SCNCapsule(capRadius: 45, height: 165)
+        
+        geometry.firstMaterial?.diffuse.contents = UIColor.red
+        
+        collider = SCNNode(geometry: geometry)
+        
+        collider.position = SCNVector3Make(0.0, 140.0, 0.0)
+        collider.name = "collider"
+        collider.opacity = 0.0
+        
+        let physicsGeometry = SCNCapsule(capRadius: 47*scale, height: 165*scale)
+        let physicsShape = SCNPhysicsShape(geometry: physicsGeometry, options: nil)
+        
+        collider.physicsBody = SCNPhysicsBody(type: .kinematic, shape: physicsShape)
+        collider.physicsBody!.categoryBitMask = BitmaskPlayer
+        collider.physicsBody!.contactTestBitMask = BitmaskWall
+        
+        addChildNode(collider)
+    }
+    
 }
 
 extension Player: CAAnimationDelegate {

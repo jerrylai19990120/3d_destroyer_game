@@ -157,6 +157,8 @@ class GameViewController: UIViewController {
         player!.rotation = SCNVector4Make(0, 1, 0, Float.pi)
         
         mainScene.rootNode.addChildNode(player!)
+        
+        player!.setupColliders(with: 0.0026)
     }
     
     //touches + movement
@@ -228,6 +230,25 @@ class GameViewController: UIViewController {
     }
     
     //enemies
+    
+    //collisions
+    private func characterNode(_ characterNode:SCNNode, hitwall wall: SCNNode, withContact contact:SCNPhysicsContact){
+        
+        if characterNode.name != "collider" {return}
+        
+        if maxPenetrationDistance > contact.penetrationDistance {return}
+        
+        maxPenetrationDistance = contact.penetrationDistance
+        var characterPosition = float3(characterNode.parent!.position)
+        
+        var positionOffset = float3(contact.contactNormal) * Float(contact.penetrationDistance)
+        
+        positionOffset.y = 0
+        characterPosition += positionOffset
+        
+        replacementPosition[characterNode.parent!] = SCNVector3(characterPosition)
+        
+    }
 
 }
 
@@ -251,7 +272,11 @@ extension GameViewController: SCNSceneRendererDelegate {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didSimulatePhysicsAtTime time: TimeInterval) {
+        if gameState != .playing {return}
         
+        for (node, position) in replacementPosition {
+            node.position = position
+        }
     }
     
 }
@@ -259,11 +284,17 @@ extension GameViewController: SCNSceneRendererDelegate {
 extension GameViewController: SCNPhysicsContactDelegate {
     
     func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
+        if gameState != .playing {return}
         
+        contact.match(BitmaskWall) { (matching, other) in
+            self.characterNode(other, hitwall: matching, withContact: contact)
+        }
     }
     
     func physicsWorld(_ world: SCNPhysicsWorld, didUpdate contact: SCNPhysicsContact) {
-        
+        contact.match(BitmaskWall) { (matching, other) in
+            self.characterNode(other, hitwall: matching, withContact: contact)
+        }
     }
     
     func physicsWorld(_ world: SCNPhysicsWorld, didEnd contact: SCNPhysicsContact) {
